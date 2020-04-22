@@ -12,6 +12,7 @@ class DStarLite:
         self.km = 0
 
         self.pq = utils.PriorityQueue()
+        self.origEdgeCost = { "AB": 1, "BC": 1, "BD": 1, "CD": 1, "CG": 1, "DG": 10 }
         self.edgeCost = { "AB": 1, "BC": 1, "BD": 1, "CD": 1, "CG": 1, "DG": 10 }
         self.prevEdgeCost = { "AB": 1, "BC": 1, "BD": 1, "CD": 1, "CG": 1, "DG": 10 }
         self.gValue = { "A": float('inf'), "B": float('inf'), "C": float('inf'), "D": float('inf'), "G": float('inf') }
@@ -51,8 +52,11 @@ class DStarLite:
             return None
 
     def updateObstacleEdges(self, nodeName):
+        # Save prev Edge Cost
         self.prevEdgeCost = copy.deepcopy(self.edgeCost)
+        # Find new Edge Cost (ie. reset all edges and change only those affected by latest obstacle position)
         changedEdgeNodes = self.getNeighbours(nodeName)
+        self.edgeCost = copy.deepcopy(self.origEdgeCost)
         for nd in changedEdgeNodes:
             alphaEdge = utils.getAlphaOrder(nd, nodeName)
             self.edgeCost[alphaEdge] = float('inf')
@@ -140,10 +144,9 @@ if __name__ == "__main__":
 
         # Scan the graph for changed edge costs
         obstNode = raw_input("Enter obstacle node:" )
-        # TODO: update edgeCosts and prevEdgeCosts
-        changedEdgeNodes = dlite.updateObstacleEdges(obstNode)
 
-        # TODO: move/reset edges after obstacle moves
+        # Now update edgeCosts corsp to latest movement of obstacle
+        changedEdgeNodes = dlite.updateObstacleEdges(obstNode)
 
         if (dlite.edgeCost != dlite.prevEdgeCost):
             
