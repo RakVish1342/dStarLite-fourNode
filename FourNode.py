@@ -19,6 +19,7 @@ class DStarLite:
         self.heuristic = self.updateHeuristics() # To store the heuristic with respect to the current robotLoc(AKA nodeStart). ALSO need to update this whenever robot moves!
 
         self.pq.push( (self.nodeGoal, (self.heuristic[self.nodeGoal], 0)) )
+        self.visitedNodes = []
 
     def getNeighbours(self, node):
         if (node == "A"):
@@ -71,12 +72,14 @@ class DStarLite:
             self.pq.push( (nodeName, self.calculateKeys(nodeName)) )
 
         elif ( (self.gValue[nodeName] == self.rhs[nodeName]) and (nodeName in self.pq.getNames()) ):
+            #self.visitedNodes.append(nodeName)
             self.pq.remove( (nodeName, self.calculateKeys(nodeName)) )
 
     def computeShortestPath(self):
         # While queue has elements in it AND the top element in queue is LT key or startNode/robotNode 
         # OR rhs_startNode > gValue_startNode
-        while( ( (self.pq.queue) and self.pq.topKey() < self.calculateKeys(self.nodeStart) ) \
+        #self.visitedNodes = [] # Include this to prevent loops?
+        while( ( (self.pq.queue) and self.pq.topKey() <= self.calculateKeys(self.nodeStart) ) \
                 or self.rhs[self.nodeStart] > self.gValue[self.nodeStart] ):
             tmpNode = self.pq.top()
             u = tmpNode[0]
@@ -104,15 +107,17 @@ class DStarLite:
                 predecessors.append(u)
                 for pred in predecessors: # represented as s in paper
                     alphaEdge = utils.getAlphaOrder(u, pred)
-                    if (rhs[pred] == self.edgeCost[alphaEdge] + gOld):
+                     # Skip RHS update value and go on to queueUpdate step if dealing with predecessor = node u itself
+                    #if ( (pred != u) and (pred not in self.visitedNodes) and (self.rhs[pred] == self.edgeCost[alphaEdge] + gOld) ):
+                    if ( (pred != u) and (self.rhs[pred] == self.edgeCost[alphaEdge] + gOld) ):
                         if(pred != "G"):
                             rhsList = []
                             # update rhs to be min of all successors
                             for succ in self.getNeighbours(pred): # represented as s' in paper
                                 alphaEdge = utils.getAlphaOrder(pred, succ)
-                                rhsList.append(self.edgeCost[alphaEdge] + self.gValues[succ])
+                                rhsList.append(self.edgeCost[alphaEdge] + self.gValue[succ])
                             self.rhs[pred] = min(rhsList)
-                    self.updateVertex(pred)
+                    self.updateVertex(pred) # include this statement in the not in self.visitedNodes??
 
 
 if __name__ == "__main__":
@@ -194,8 +199,8 @@ if __name__ == "__main__":
 
 
 # Error in slides, First iteration, C's keys were wrong. They should be 3,1 was given as 3,2 in slides
-# In first loop, should A get dequed? In mine, it does not, so make while condition >= in the OR case?
-
+# In first loop, should A get dequed? In mine, it does not, so make while condition <= in the OR case?
+# Inlcude visited Nodes list in computeShortPath() to prevent loops? ... I think this is already taken care of in if-else condition of updateVertex()
 
 
 #utils.testPriorityQueue()
