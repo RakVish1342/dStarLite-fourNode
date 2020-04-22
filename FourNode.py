@@ -1,3 +1,4 @@
+import copy
 import utils
 
 
@@ -15,7 +16,7 @@ class DStarLite:
         self.prevEdgeCost = { "AB": 1, "BC": 1, "BD": 1, "CD": 1, "CG": 1, "DG": 10 }
         self.gValue = { "A": float('inf'), "B": float('inf'), "C": float('inf'), "D": float('inf'), "G": float('inf') }
         self.rhs = { "A": float('inf'), "B": float('inf'), "C": float('inf'), "D": float('inf'), "G": 0 }
-        self.heuristic = self.getHeuristics()
+        self.heuristic = self.updateHeuristics() # To store the heuristic with respect to the current robotLoc(AKA nodeStart). ALSO need to update this whenever robot moves!
 
         self.pq.push( (self.nodeGoal, (self.heuristic[self.nodeGoal], 0)) )
 
@@ -34,7 +35,7 @@ class DStarLite:
             return None
 
     # Return heuristic of all nodes from start node / robot node
-    def getHeuristics(self):
+    def updateHeuristics(self):
         if (self.nodeStart == "A"):
             return { "A": 0, "B": 1, "C": 2, "D": 2, "G": 3 }
         elif(self.nodeStart == "B"):
@@ -49,7 +50,7 @@ class DStarLite:
             return None
 
     def updateObstacleEdges(self, nodeName):
-        self.prevEdgeCost = self.edgeCost
+        self.prevEdgeCost = copy.deepcopy(self.edgeCost)
         changedEdgeNodes = self.getNeighbours(nodeName)
         for nd in changedEdgeNodes:
             alphaEdge = utils.getAlphaOrder(nd, nodeName)
@@ -129,6 +130,7 @@ if __name__ == "__main__":
             nextStateCost.append(dlite.edgeCost[alphaEdge] + dlite.gValue[succ])
         idx = nextStateCost.index(min(nextStateCost))
         dlite.nodeStart = nextStateList[idx]
+        dlite.heuristic = dlite.updateHeuristics()
 
 
         # Scan the graph for changed edge costs
@@ -141,8 +143,7 @@ if __name__ == "__main__":
         if (dlite.edgeCost != dlite.prevEdgeCost):
             
             # Update km
-            newHeuristic = dlite.getHeuristics[dlite.nodePrev]
-            dlite.km = dlite.km + newHeuristic[dlite.nodePrev]
+            dlite.km = dlite.km + dlite.heuristic[dlite.nodePrev]
             dlite.nodePrev = dlite.nodeStart
 
             # Update source nodes of all changed edges (includes the obstacle node if bidirectional)
@@ -155,7 +156,7 @@ if __name__ == "__main__":
                     rhsList = []
                     for neigh in dlite.getNeighbours(node):
                         alphaEdge = utils.getAlphaOrder(neigh, node)
-                        rhsList.append( min(dlite.rhs[node], dlite.edgeCost[alphaEdge] + dlite.gValue[neigh]) )
+                        rhsList.append( dlite.edgeCost[alphaEdge] + dlite.gValue[neigh] )
                     dlite.rhs[node] = min(rhsList)
 
                     # Update keys
