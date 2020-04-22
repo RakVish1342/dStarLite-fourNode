@@ -48,6 +48,14 @@ class DStarLite:
         else:
             return None
 
+    def updateObstacleEdges(self, nodeName):
+        self.prevEdgeCost = self.edgeCost
+        changedEdgeNodes = self.getNeighbours(nodeName)
+        for nd in changedEdgeNodes:
+            alphaEdge = utils.getAlphaOrder(nd, nodeName)
+            self.edgeCost[alphaEdge] = float('inf')
+        return changedEdgeNodes
+
     def calculateKeys(self, nodeName):
         k1 = min(self.gValue[nodeName], self.rhs[nodeName]) + self.heuristic[nodeName] + self.km
         k2 = min(self.gValue[nodeName], self.rhs[nodeName])
@@ -122,8 +130,13 @@ if __name__ == "__main__":
         idx = nextStateCost.index(min(nextStateCost))
         dlite.nodeStart = nextStateList[idx]
 
-        # TODO: Scan the graph for changed edge costs
+
+        # Scan the graph for changed edge costs
+        obstNode = raw_input("Enter obstacle node:" )
         # TODO: update edgeCosts and prevEdgeCosts
+        changedEdgeNodes = dlite.updateObstacleEdges(obstNode)
+
+        # TODO: move/reset edges after obstacle moves
 
         if (dlite.edgeCost != dlite.prevEdgeCost):
             
@@ -132,9 +145,25 @@ if __name__ == "__main__":
             dlite.km = dlite.km + newHeuristic[dlite.nodePrev]
             dlite.nodePrev = dlite.nodeStart
 
-            # Update source nodes of all changed edges
-            # do stuff
-            # do stuff
+            # Update source nodes of all changed edges (includes the obstacle node if bidirectional)
+            # NOTE: Implementing the RHS value update for all source nodes of changed edges differently from what paper gives
+            # Following a more logical way of approaching it as given in the MIT video when obstacle appears at C
+            changedEdgeNodes.insert(0, obstNode) # Insert rather than append used so that we start with the trivial obstacle node itself.
+            for node in changedEdgeNodes:
+                if (node != dlite.nodeGoal):
+                    # Update RHS
+                    rhsList = []
+                    for neigh in dlite.getNeighbours(node):
+                        alphaEdge = utils.getAlphaOrder(neigh, node)
+                        rhsList.append( min(dlite.rhs[node], dlite.edgeCost[alphaEdge] + dlite.gValue[neigh]) )
+                    dlite.rhs[node] = min(rhsList)
+
+                    # Update keys
+                    dlite.updateVertex(node)
+
+            # Perform best-first searach again as per priority queue
+            dlite.computeShortestPath()
+
 
 
 
