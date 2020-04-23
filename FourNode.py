@@ -8,6 +8,7 @@ class DStarLite:
         self.nodeStart = "A"
         self.nodePrev = self.nodeStart
         self.nodeGoal = "G"
+        self.path = [self.nodeStart]
 
         self.km = 0
 
@@ -139,6 +140,7 @@ if __name__ == "__main__":
             nextStateCost.append(dlite.edgeCost[alphaEdge] + dlite.gValue[succ])
         idx = nextStateCost.index(min(nextStateCost))
         dlite.nodeStart = nextStateList[idx]
+        dlite.path.append(dlite.nodeStart)
         dlite.heuristic = dlite.updateHeuristics()
 
 
@@ -173,9 +175,7 @@ if __name__ == "__main__":
             # Perform best-first searach again as per priority queue
             dlite.computeShortestPath()
 
-
-
-
+    print("Path Followed by Robot: ", dlite.path)
 
 
 
