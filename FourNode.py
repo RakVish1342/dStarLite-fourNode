@@ -58,6 +58,10 @@ class DStarLite:
         # Find new Edge Cost (ie. reset all edges and change only those affected by latest obstacle position)
         changedEdgeNodes = self.getNeighbours(nodeName)
         self.edgeCost = copy.deepcopy(self.origEdgeCost)
+
+        if(nodeName == "X"): # If no obstacles
+            return []
+
         for nd in changedEdgeNodes:
             alphaEdge = utils.getAlphaOrder(nd, nodeName)
             self.edgeCost[alphaEdge] = float('inf')
@@ -127,8 +131,15 @@ class DStarLite:
 
 if __name__ == "__main__":
     dlite = DStarLite()
-    dlite.pq.display()
+    #dlite.pq.display()
 
+    print("RobotLoc: ", dlite.nodeStart)
+    print("gValues: ", dlite.gValue)
+    print("rhs: ", dlite.rhs)
+    print("km: ", dlite.km)
+    print("queue: ", dlite.pq.queue)
+    print("Goal: ", dlite.nodeGoal)
+    print("-----")
     dlite.computeShortestPath()
 
     while (dlite.nodeStart != dlite.nodeGoal):
@@ -140,6 +151,7 @@ if __name__ == "__main__":
             nextStateCost.append(dlite.edgeCost[alphaEdge] + dlite.gValue[succ])
         idx = nextStateCost.index(min(nextStateCost))
         dlite.nodeStart = nextStateList[idx]
+        print("RobotLoc: ", dlite.nodeStart)
         dlite.path.append(dlite.nodeStart)
         dlite.heuristic = dlite.updateHeuristics()
 
@@ -175,31 +187,20 @@ if __name__ == "__main__":
             # Perform best-first searach again as per priority queue
             dlite.computeShortestPath()
 
+        #print("RobotLoc: ", dlite.nodeStart)
+        print("gValues: ", dlite.gValue)
+        print("rhs: ", dlite.rhs)
+        print("km: ", dlite.km)
+        print("queue: ", dlite.pq.queue)
+        print("Goal: ", dlite.nodeGoal)
+        print("-----")
+
     print("Path Followed by Robot: ", dlite.path)
 
 
-
+# -----------------------------------------------------------------------------------------------------------
 
     #utils.testPriorityQueue()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Error in slides, First iteration, C's keys were wrong. They should be 3,1 was given as 3,2 in slides
 # In first loop, should A get dequed? In mine, it does not, so make while condition <= in the OR case?
