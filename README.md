@@ -1,7 +1,7 @@
 5 Node D\* Lite Algorithm
 ===
 
-Implementation has been done for the graph presented at: ``` https://www.youtube.com/watch?v=_4u9W1xOuts&t=3372s```
+Implementation of the incremental path planning algorithm D\* Lite has been done for the graph presented at: ``` https://www.youtube.com/watch?v=_4u9W1xOuts&t=3372s```
 
 Examples
 ---
