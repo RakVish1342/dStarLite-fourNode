@@ -143,6 +143,7 @@ class PositionSearchProblem(search.SearchProblem):
         goal: A position in the gameState
         """
         self.walls = [[False for i in xrange(gameState.getMazeWidth())] for j in xrange(gameState.getMazeHeight())]
+        self._hiddenWalls = gameState.getWalls()
         self.startState = gameState.getPacmanPosition()
         if start != None: self.startState = start
         self.goal = goal
@@ -170,12 +171,12 @@ class PositionSearchProblem(search.SearchProblem):
 
         return isGoal
 
-    def senseLocalWalls(self, gameState):
-        pacPos = gameState.getPacmanPosition()
-        for x in xrange(pacPos[0] - 1, pacPos[0] + 1):
-            for y in xrange(pacPos[1] - 1, pacPos[1] + 1):
-                if x != pacPos[0] and y != pacPos[1]:
-                    if not self.walls[x][y] and gameState.hasWall(x, y):
+# ND: Added alternate implementation in pacman.py getLocalWalls
+    def senseLocalWalls(self, state):
+        for x in xrange(state[0] - 1, state[0] + 1):
+            for y in xrange(state[1] - 1, state[1] + 1):
+                if x != state[0] and y != state[1]:
+                    if not self.walls[x][y] and self._hiddenWalls[x][y]:
                         self.walls[x][y] = True
 
     def getSuccessors(self, state):

@@ -187,7 +187,17 @@ class GameState:
         if currentFood[x][y] == True: ...
         """
         return self.data.food
-    '''
+
+# ND: Possible alternate implementation for local observability.
+    def getLocalWalls(self):
+        pacLoc = self.getPacmanPosition()
+        wallList = []
+        for x in range(pacLoc[0] - 1, pacLoc[0] + 1):
+            for y in range(pacLoc[1] - 1, pacLoc[1] + 1):
+                if self.hasWall(x, y):
+                    wallList.append((x, y))
+        return wallList
+
     def getWalls(self):
         """
         Returns a Grid of boolean wall indicator variables.
@@ -199,7 +209,7 @@ class GameState:
         if walls[x][y] == True: ...
         """
         return self.data.layout.walls
-    '''
+
     def getMazeWidth(self):
         """
         Returns Width of pacman maze
