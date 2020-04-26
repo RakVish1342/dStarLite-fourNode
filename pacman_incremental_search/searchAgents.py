@@ -115,11 +115,16 @@ class SearchAgent(Agent):
 
         state: a GameState object (pacman.py)
         """
+        pacPos = state.data.agentStates[0].getPosition()
+        newProblem = self.searchType(state)
+        newProblem.senseLocalWalls(pacPos)
+        self.actions = self.searchFunction(newProblem)
+
         if 'actionIndex' not in dir(self): self.actionIndex = 0
         i = self.actionIndex
         self.actionIndex += 1
         if i < len(self.actions):
-            return self.actions[i]
+            return self.actions[0]
         else:
             return Directions.STOP
 
@@ -143,6 +148,12 @@ class PositionSearchProblem(search.SearchProblem):
         goal: A position in the gameState
         """
         self.walls = [[False for i in xrange(gameState.getMazeWidth())] for j in xrange(gameState.getMazeHeight())]
+        for x in xrange(gameState.getMazeWidth()):
+            self.walls[x][0] = True
+            self.walls[x][gameState.getMazeHeight() - 1] = True
+        for y in xrange(gameState.getMazeHeight()):
+            self.walls[0][y] = True
+            self.walls[gameState.getMazeWidth() - 1][y] = True
         self._hiddenWalls = gameState.getWalls()
         self.startState = gameState.getPacmanPosition()
         if start != None: self.startState = start
@@ -173,11 +184,9 @@ class PositionSearchProblem(search.SearchProblem):
 
 # ND: Added alternate implementation in pacman.py getLocalWalls
     def senseLocalWalls(self, state):
-        for x in xrange(state[0] - 1, state[0] + 1):
-            for y in xrange(state[1] - 1, state[1] + 1):
-                if x != state[0] and y != state[1]:
-                    if not self.walls[x][y] and self._hiddenWalls[x][y]:
-                        self.walls[x][y] = True
+        for x in xrange(state[0] - 1, state[0] + 2):
+            for y in xrange(state[1] - 1, state[1] + 2):
+                self.walls[x][y] = self._hiddenWalls[x][y]
 
     def getSuccessors(self, state):
         """
@@ -276,13 +285,6 @@ class FoodSearchProblem:
                 nextFood[nextx][nexty] = False
                 successors.append( ( ((nextx, nexty), nextFood), direction, 1) )
         return successors
-
-    def senseLocalWalls(self, state):
-        for x in xrange(state[0] - 1, state[0] + 1):
-            for y in xrange(state[1] - 1, state[1] + 1):
-                if x != state[0] and y != state[1]:
-                    if not self.walls[x][y] and self._hiddenWalls[x][y]:
-                        self.walls[x][y] = True
 
     def getCostOfActions(self, actions):
         """Returns the cost of a particular sequence of actions.  If those actions

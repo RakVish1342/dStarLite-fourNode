@@ -86,7 +86,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     prevSeen = []  # do not push nodes found in this list. "Discovered" nodes
     Fringe = util.PriorityQueue()
     startState = problem.getStartState()
-    problem.senseLocalWalls(startState)
     Fringe.push(startState, heuristic(startState, problem))
     pathCostDict[startState] = [[], 0]
     while not Fringe.isEmpty():
