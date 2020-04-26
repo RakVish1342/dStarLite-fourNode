@@ -251,7 +251,8 @@ class FoodSearchProblem:
     """
     def __init__(self, startingGameState):
         self.start = (startingGameState.getPacmanPosition(), startingGameState.getFood())
-        self.walls = startingGameState.getWalls()
+        self.walls = [[False for i in xrange(startingGameState.getMazeWidth())] for j in xrange(startingGameState.getMazeHeight())]
+        self._hiddenWalls = startingGameState.getWalls()
         self.startingGameState = startingGameState
         self._expanded = 0 # DO NOT CHANGE
         self.heuristicInfo = {} # A dictionary for the heuristic to store information
@@ -275,6 +276,13 @@ class FoodSearchProblem:
                 nextFood[nextx][nexty] = False
                 successors.append( ( ((nextx, nexty), nextFood), direction, 1) )
         return successors
+
+    def senseLocalWalls(self, state):
+        for x in xrange(state[0] - 1, state[0] + 1):
+            for y in xrange(state[1] - 1, state[1] + 1):
+                if x != state[0] and y != state[1]:
+                    if not self.walls[x][y] and self._hiddenWalls[x][y]:
+                        self.walls[x][y] = True
 
     def getCostOfActions(self, actions):
         """Returns the cost of a particular sequence of actions.  If those actions
