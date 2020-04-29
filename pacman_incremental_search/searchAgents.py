@@ -89,6 +89,8 @@ class SearchAgent(Agent):
             raise AttributeError, prob + ' is not a search problem type in SearchAgents.py.'
         self.searchType = globals()[prob]
         print('[SearchAgent] using problem type ' + prob)
+        self.walls = list()
+
 
     def registerInitialState(self, state):
         """
@@ -99,9 +101,19 @@ class SearchAgent(Agent):
 
         state: a GameState object (pacman.py)
         """
+        mazeWidth = state.getMazeWidth()
+        mazeHeight = state.getMazeHeight()
+        self.walls = [[False for i in xrange(mazeHeight)] for j in xrange(mazeWidth)]
+        for x in xrange(mazeWidth):
+            self.walls[x][0] = True
+            self.walls[x][mazeHeight - 1] = True
+        for y in xrange(mazeHeight):
+            self.walls[0][y] = True
+            self.walls[mazeWidth - 1][y] = True
+
         if self.searchFunction == None: raise Exception, "No search function provided for SearchAgent"
         starttime = time.time()
-        problem = self.searchType(state) # Makes a new search problem
+        problem = self.searchType(state, self.walls) # Makes a new search problem
         self.actions  = self.searchFunction(problem) # Find a path
         totalCost = problem.getCostOfActions(self.actions)
         print('Path found with total cost of %d in %.1f seconds' % (totalCost, time.time() - starttime))
@@ -116,17 +128,27 @@ class SearchAgent(Agent):
         state: a GameState object (pacman.py)
         """
         pacPos = state.data.agentStates[0].getPosition()
-        newProblem = self.searchType(state)
-        newProblem.senseLocalWalls(pacPos)
+        newProblem = self.searchType(state, self.walls)
         self.actions = self.searchFunction(newProblem)
 
-        if 'actionIndex' not in dir(self): self.actionIndex = 0
-        i = self.actionIndex
-        self.actionIndex += 1
-        if i < len(self.actions):
+#        if 'actionIndex' not in dir(self): self.actionIndex = 0
+#        i = self.actionIndex
+#        self.actionIndex += 1
+        if 0 < len(self.actions):
             return self.actions[0]
         else:
             return Directions.STOP
+
+    def observationFunction(self, observation):
+        pos = observation.data.agentStates[0].getPosition()
+
+        for x in xrange(pos[0] - 1, pos[0] + 2):
+            for y in xrange(pos[1] - 1, pos[1] + 2):
+                self.walls[x][y] = observation.data.layout.isWall((x, y))
+
+        return observation
+
+
 
 class PositionSearchProblem(search.SearchProblem):
     """
@@ -139,7 +161,7 @@ class PositionSearchProblem(search.SearchProblem):
     Note: this search problem is fully specified; you should NOT change it.
     """
 
-    def __init__(self, gameState, costFn = lambda x: 1, goal=(1,1), start=None, warn=True, visualize=True):
+    def __init__(self, gameState, knownWalls, costFn = lambda x: 1, goal=(1,1), start=None, warn=True, visualize=True):
         """
         Stores the start and goal.
 
@@ -147,14 +169,7 @@ class PositionSearchProblem(search.SearchProblem):
         costFn: A function from a search state (tuple) to a non-negative number
         goal: A position in the gameState
         """
-        self.walls = [[False for i in xrange(gameState.getMazeWidth())] for j in xrange(gameState.getMazeHeight())]
-        for x in xrange(gameState.getMazeWidth()):
-            self.walls[x][0] = True
-            self.walls[x][gameState.getMazeHeight() - 1] = True
-        for y in xrange(gameState.getMazeHeight()):
-            self.walls[0][y] = True
-            self.walls[gameState.getMazeWidth() - 1][y] = True
-        self._hiddenWalls = gameState.getWalls()
+        self.walls = knownWalls
         self.startState = gameState.getPacmanPosition()
         if start != None: self.startState = start
         self.goal = goal
@@ -181,12 +196,6 @@ class PositionSearchProblem(search.SearchProblem):
                     __main__._display.drawExpandedCells(self._visitedlist) #@UndefinedVariable
 
         return isGoal
-
-# ND: Added alternate implementation in pacman.py getLocalWalls
-    def senseLocalWalls(self, state):
-        for x in xrange(state[0] - 1, state[0] + 2):
-            for y in xrange(state[1] - 1, state[1] + 2):
-                self.walls[x][y] = self._hiddenWalls[x][y]
 
     def getSuccessors(self, state):
         """
