@@ -82,7 +82,55 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pathCostDict = {}
+    prevSeen = []  # do not push nodes found in this list. "Discovered" nodes
+    Fringe = util.PriorityQueue()
+    startState = problem.getStartState()
+    Fringe.push(startState, heuristic(startState, problem))
+    pathCostDict[startState] = [[], 0]
+    while not Fringe.isEmpty():
+        # choose a child node from the fringe
+        currentState = Fringe.pop()
+        prevSeen.append(currentState)
+        # if the child is a goal state return a solution
+        if problem.isGoalState(currentState):
+            print(">>>", pathCostDict[currentState][0])
+            return pathCostDict[currentState][0]
+        else:
+            # expand the node
+            # Note: getSuccessor might return even the wall states. Since registerInitialState() and observe()
+            # functions are being used to only keep track of walls that have been encountered by the bot.
+            children = problem.getSuccessors(currentState)
+            # for each successor add to fringe iff it is not already expanded or in the fringe.
+
+            for child in children:
+                if child[0] not in prevSeen:
+                    # for the child state append the action set to the current state
+                    # with the action to the child.
+                    h_val = heuristic(child[0], problem)
+                    g_val = pathCostDict[currentState][1] + child[2]
+                    f_val = h_val + g_val
+                    if child[0] not in pathCostDict or g_val < pathCostDict[child[0]][1]:
+                        # Currently storing the Manhattan path (ie. ignoring walls) to the given node due to local observability
+                        # In pacman A*, where full awareness of the map was present, each step of this algo would store the true
+                        #  path to that node (with wall considerations), and  nt the manhattan path.
+                        pathCostDict[child[0]] = [pathCostDict[currentState][0]+[child[1]], g_val]
+
+                    Fringe.update(child[0], f_val)
+                    # For graph search to avoid loops add the child to the "discovered" node list
+    return []
+
+
+def dStarLite(problem, heuristic=nullHeuristic):
+    print("DSTAR BANDAAAAA")
+
+
+
+
+
+
+
 
 # Abbreviations
 astar = aStarSearch
+dlite = dStarLite

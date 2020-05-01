@@ -89,6 +89,8 @@ class SearchAgent(Agent):
             raise AttributeError, prob + ' is not a search problem type in SearchAgents.py.'
         self.searchType = globals()[prob]
         print('[SearchAgent] using problem type ' + prob)
+        self.walls = list()
+
 
     def registerInitialState(self, state):
         """
@@ -99,9 +101,25 @@ class SearchAgent(Agent):
 
         state: a GameState object (pacman.py)
         """
+        # Here, knowledge of all the walls is erased, since for our pacman only local walls are known
+        # Thus, in A* Star, when neighbours/children of a node are found using the getSuccessor() function,
+        # The function will return even the wal states, assuming the wall does not exist...UNLESS ofc, the robot
+        # has previously gone near a particular wall and has updated the presence of that wall using the observe() function
+        mazeWidth = state.getMazeWidth()
+        mazeHeight = state.getMazeHeight()
+        # Set all knowledge of walls to false.
+        self.walls = [[False for i in xrange(mazeHeight)] for j in xrange(mazeWidth)]
+        # Set boundary condition walls to True
+        for x in xrange(mazeWidth):
+            self.walls[x][0] = True
+            self.walls[x][mazeHeight - 1] = True
+        for y in xrange(mazeHeight):
+            self.walls[0][y] = True
+            self.walls[mazeWidth - 1][y] = True
+
         if self.searchFunction == None: raise Exception, "No search function provided for SearchAgent"
         starttime = time.time()
-        problem = self.searchType(state) # Makes a new search problem
+        problem = self.searchType(state, self.walls) # Makes a new search problem
         self.actions  = self.searchFunction(problem) # Find a path
         totalCost = problem.getCostOfActions(self.actions)
         print('Path found with total cost of %d in %.1f seconds' % (totalCost, time.time() - starttime))
@@ -115,13 +133,28 @@ class SearchAgent(Agent):
 
         state: a GameState object (pacman.py)
         """
-        if 'actionIndex' not in dir(self): self.actionIndex = 0
-        i = self.actionIndex
-        self.actionIndex += 1
-        if i < len(self.actions):
-            return self.actions[i]
+        pacPos = state.data.agentStates[0].getPosition()
+        newProblem = self.searchType(state, self.walls)
+        self.actions = self.searchFunction(newProblem)
+
+#        if 'actionIndex' not in dir(self): self.actionIndex = 0
+#        i = self.actionIndex
+#        self.actionIndex += 1
+        if 0 < len(self.actions):
+            return self.actions[0]
         else:
             return Directions.STOP
+
+    def observationFunction(self, observation):
+        pos = observation.data.agentStates[0].getPosition()
+
+        for x in xrange(pos[0] - 1, pos[0] + 2):
+            for y in xrange(pos[1] - 1, pos[1] + 2):
+                self.walls[x][y] = observation.data.layout.isWall((x, y))
+
+        return observation
+
+
 
 class PositionSearchProblem(search.SearchProblem):
     """
@@ -134,7 +167,7 @@ class PositionSearchProblem(search.SearchProblem):
     Note: this search problem is fully specified; you should NOT change it.
     """
 
-    def __init__(self, gameState, costFn = lambda x: 1, goal=(1,1), start=None, warn=True, visualize=True):
+    def __init__(self, gameState, knownWalls, costFn = lambda x: 1, goal=(1,1), start=None, warn=True, visualize=True):
         """
         Stores the start and goal.
 
@@ -142,7 +175,7 @@ class PositionSearchProblem(search.SearchProblem):
         costFn: A function from a search state (tuple) to a non-negative number
         goal: A position in the gameState
         """
-        self.walls = [[False for i in xrange(gameState.getMazeWidth())] for j in xrange(gameState.getMazeHeight())]
+        self.walls = knownWalls
         self.startState = gameState.getPacmanPosition()
         if start != None: self.startState = start
         self.goal = goal
@@ -169,14 +202,6 @@ class PositionSearchProblem(search.SearchProblem):
                     __main__._display.drawExpandedCells(self._visitedlist) #@UndefinedVariable
 
         return isGoal
-
-    def senseLocalWalls(self, gameState):
-        pacPos = gameState.getPacmanPosition()
-        for x in xrange(pacPos[0] - 1, pacPos[0] + 1):
-            for y in xrange(pacPos[1] - 1, pacPos[1] + 1):
-                if x != pacPos[0] and y != pacPos[1]:
-                    if not self.walls[x][y] and gameState.hasWall(x, y):
-                        self.walls[x][y] = True
 
     def getSuccessors(self, state):
         """
@@ -239,61 +264,62 @@ def euclideanHeuristic(position, problem, info={}):
 # This portion is incomplete.  Time to write code!  #
 #####################################################
 
-class FoodSearchProblem:
-    """
-    A search problem associated with finding the a path that collects all of the
-    food (dots) in a Pacman game.
+#class FoodSearchProblem:
+#    """
+#    A search problem associated with finding the a path that collects all of the
+#    food (dots) in a Pacman game.
 
-    A search state in this problem is a tuple ( pacmanPosition, foodGrid ) where
-      pacmanPosition: a tuple (x,y) of integers specifying Pacman's position
-      foodGrid:       a Grid (see game.py) of either True or False, specifying remaining food
-    """
-    def __init__(self, startingGameState):
-        self.start = (startingGameState.getPacmanPosition(), startingGameState.getFood())
-        self.walls = startingGameState.getWalls()
-        self.startingGameState = startingGameState
-        self._expanded = 0 # DO NOT CHANGE
-        self.heuristicInfo = {} # A dictionary for the heuristic to store information
+#    A search state in this problem is a tuple ( pacmanPosition, foodGrid ) where
+#      pacmanPosition: a tuple (x,y) of integers specifying Pacman's position
+#      foodGrid:       a Grid (see game.py) of either True or False, specifying remaining food
+#    """
+#    def __init__(self, startingGameState):
+#        self.start = (startingGameState.getPacmanPosition(), startingGameState.getFood())
+#        self.walls = [[False for i in xrange(startingGameState.getMazeWidth())] for j in xrange(startingGameState.getMazeHeight())]
+#        self._hiddenWalls = startingGameState.getWalls()
+#        self.startingGameState = startingGameState
+#        self._expanded = 0 # DO NOT CHANGE
+#        self.heuristicInfo = {} # A dictionary for the heuristic to store information
 
-    def getStartState(self):
-        return self.start
+#    def getStartState(self):
+#        return self.start
 
-    def isGoalState(self, state):
-        return state[1].count() == 0
+#    def isGoalState(self, state):
+#        return state[1].count() == 0
 
-    def getSuccessors(self, state):
-        "Returns successor states, the actions they require, and a cost of 1."
-        successors = []
-        self._expanded += 1 # DO NOT CHANGE
-        for direction in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            x,y = state[0]
-            dx, dy = Actions.directionToVector(direction)
-            nextx, nexty = int(x + dx), int(y + dy)
-            if not self.walls[nextx][nexty]:
-                nextFood = state[1].copy()
-                nextFood[nextx][nexty] = False
-                successors.append( ( ((nextx, nexty), nextFood), direction, 1) )
-        return successors
+#    def getSuccessors(self, state):
+#        "Returns successor states, the actions they require, and a cost of 1."
+#        successors = []
+#        self._expanded += 1 # DO NOT CHANGE
+#        for direction in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+#            x,y = state[0]
+#            dx, dy = Actions.directionToVector(direction)
+#            nextx, nexty = int(x + dx), int(y + dy)
+#            if not self.walls[nextx][nexty]:
+#                nextFood = state[1].copy()
+#                nextFood[nextx][nexty] = False
+#                successors.append( ( ((nextx, nexty), nextFood), direction, 1) )
+#        return successors
 
-    def getCostOfActions(self, actions):
-        """Returns the cost of a particular sequence of actions.  If those actions
-        include an illegal move, return 999999"""
-        x,y= self.getStartState()[0]
-        cost = 0
-        for action in actions:
-            # figure out the next state and see whether it's legal
-            dx, dy = Actions.directionToVector(action)
-            x, y = int(x + dx), int(y + dy)
-            if self.walls[x][y]:
-                return 999999
-            cost += 1
-        return cost
+#    def getCostOfActions(self, actions):
+#        """Returns the cost of a particular sequence of actions.  If those actions
+#        include an illegal move, return 999999"""
+#        x,y= self.getStartState()[0]
+#        cost = 0
+#        for action in actions:
+#            # figure out the next state and see whether it's legal
+#            dx, dy = Actions.directionToVector(action)
+#            x, y = int(x + dx), int(y + dy)
+#            if self.walls[x][y]:
+#                return 999999
+#            cost += 1
+#        return cost
 
-class AStarFoodSearchAgent(SearchAgent):
-    "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
-    def __init__(self):
-        self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
-        self.searchType = FoodSearchProblem
+#class AStarFoodSearchAgent(SearchAgent):
+#    "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
+#    def __init__(self):
+#        self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
+#        self.searchType = FoodSearchProblem
 
 def foodHeuristic(state, problem):
     """
