@@ -192,17 +192,21 @@ class PositionSearchProblem(search.SearchProblem):
             self.rhs = {}
             self.pq = util.PriorityQueueDStarLite() # PrioorityQueue is carried forward through each iterations
 
-            #for state1 in gameState.getAllStates():                                  # initially all costs are 1 (including wall positions)   
-            #    for state2 in gameState.getAllNeighbourStates(state1):               # set neighbouring states only to 1  # dict[ set([state1, state2]) ] = 1                                   
-            #        self.origEdgeCost.update({set([state1, state2]) : 1})
-            #        self.edgeCost.update({set([state1, state2]) : 1})
-            #        self.prevEdgeCost.update({set([state1, state2]) : 1})
-            #for state in gameState.getAllStates():
-            #    self.gValue.update({state : float('inf')})
-            #for state in gameState.getAllStates():
-            #    if state != self.nodeGoal:
-            #        self.rhs.update({state : float('inf')})
-            #self.rhs.update({self.nodeGoal : 0})
+            # Set Edge Costs
+            for state1 in self.getAllInternalStates(gameState): # initially all costs are 1 (including wall positions)
+                for state2 in self.getSuccessorsTmp(state1):
+                        self.origEdgeCost[ util.setStr(state1, state2) ] = 1
+                        self.edgeCost[ util.setStr(state1, state2) ] = 1
+                        self.prevEdgeCost[ util.setStr(state1, state2) ] = 1
+            ## Now go through self.walls and set edge cost to inf ?
+            ## OR just exclude outermost walls always as part of general algorithm?
+
+            # Set g and rhs values
+            for state in self.getAllInternalStates(gameState):
+                self.gValue[state] = float('inf')
+                self.rhs[state] = float('inf')
+            self.rhs[self.goal] = 0  # rhs of goal state is 0
+
             #self.heuristic = self.updateHeuristics() # To store the heuristic with respect to the current robotLoc(AKA nodeStart). ALSO need to update this whenever robot moves!
 
             #self.pq.push( (self.nodeGoal, (self.heuristic[self.nodeGoal], 0)) )
@@ -232,6 +236,38 @@ class PositionSearchProblem(search.SearchProblem):
                     __main__._display.drawExpandedCells(self._visitedlist) #@UndefinedVariable
 
         return isGoal
+
+    def getAllInternalStates(self, gameState):
+        xStart = 1
+        xStop = gameState.getMazeWidth() - 1 # For tinyMaze, mazeWidth = mazeHeight = 7
+        yStart = 1
+        yStop = gameState.getMazeHeight() - 1
+        allStates = []
+        for x in range(xStart, xStop): # For tiny maze, this gives a list from 1 to 5 for x and y
+            for y in range(yStart, yStop):
+                allStates.append((x,y))
+        return allStates
+
+    def getSuccessorsTmp(self, state):
+        """
+        Returns successor states, the actions they require, and a cost of 1.
+
+         As noted in search.py:
+             For a given state, this should return a list of triples,
+         (successor, action, stepCost), where 'successor' is a
+         successor to the current state, 'action' is the action
+         required to get there, and 'stepCost' is the incremental
+         cost of expanding to that successor
+        """
+        successors = []
+        for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+            x,y = state
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if not self.walls[nextx][nexty]:
+                nextState = (nextx, nexty)
+                successors.append(nextState)
+        return successors
 
     def getSuccessors(self, state):
         """
@@ -277,6 +313,8 @@ class PositionSearchProblem(search.SearchProblem):
             if self.walls[x][y]: return 999999
             cost += self.costFn((x,y))
         return cost
+        
+
 
 def manhattanHeuristic(position, problem, info={}):
     "The Manhattan distance heuristic for a PositionSearchProblem"
@@ -506,3 +544,9 @@ def mazeDistance(point1, point2, gameState):
     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
+
+
+
+##?? Might need to init all known walls to False...even the border walls, so that true sense of not knowing wall boundaries exists, AND
+# edge costs initialized will be accurate.
+##?? Exclude outermost walls as part of general algorithm? OR set that to inf in the graph? Maybe exclude in algo so that weird node resets don't happen

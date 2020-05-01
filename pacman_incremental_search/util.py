@@ -731,3 +731,5 @@ def unmutePrint():
     sys.stdout = _ORIGINAL_STDOUT
     #sys.stderr = _ORIGINAL_STDERR
 
+def setStr(state1, state2):
+    return str( set([state1,state2]) )
