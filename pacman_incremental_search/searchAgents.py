@@ -83,6 +83,7 @@ class SearchAgent(Agent):
             print('[SearchAgent] using function %s and heuristic %s' % (fn, heuristic))
             # Note: this bit of Python trickery combines the search algorithm and the heuristic
             self.searchFunction = lambda x: func(x, heuristic=heur)
+            self.searchAlgoFlag = fn # Later used to identify if agent is dStarLite, which requries additional init conditions as compared to aStar
 
         # Get the search problem type from the name
         if prob not in globals().keys() or not prob.endswith('Problem'):
@@ -119,7 +120,7 @@ class SearchAgent(Agent):
 
         if self.searchFunction == None: raise Exception, "No search function provided for SearchAgent"
         starttime = time.time()
-        problem = self.searchType(state, self.walls) # Makes a new search problem
+        problem = self.searchType(state, self.walls, self.searchAlgoFlag) # Makes a new search problem
         self.actions  = self.searchFunction(problem) # Find a path
         totalCost = problem.getCostOfActions(self.actions)
         print('Path found with total cost of %d in %.1f seconds' % (totalCost, time.time() - starttime))
@@ -134,7 +135,7 @@ class SearchAgent(Agent):
         state: a GameState object (pacman.py)
         """
         pacPos = state.data.agentStates[0].getPosition()
-        newProblem = self.searchType(state, self.walls)
+        newProblem = self.searchType(state, self.walls, self.searchAlgoFlag)
         self.actions = self.searchFunction(newProblem)
 
 #        if 'actionIndex' not in dir(self): self.actionIndex = 0
@@ -167,7 +168,7 @@ class PositionSearchProblem(search.SearchProblem):
     Note: this search problem is fully specified; you should NOT change it.
     """
 
-    def __init__(self, gameState, knownWalls, costFn = lambda x: 1, goal=(1,1), start=None, warn=True, visualize=True):
+    def __init__(self, gameState, knownWalls, algoFlag, costFn = lambda x: 1, goal=(1,1), start=None, warn=True, visualize=True):
         """
         Stores the start and goal.
 
@@ -181,6 +182,35 @@ class PositionSearchProblem(search.SearchProblem):
         self.goal = goal
         self.costFn = costFn
         self.visualize = visualize
+        # Additional variables required if dStarAlgorithm
+        if(algoFlag == 'dlite'):
+            self.km = 0
+            self.origEdgeCost = {}
+            self.edgeCost = {}
+            self.prevEdgeCost = {}
+            self.gValue = {}
+            self.rhs = {}
+            self.pq = util.PriorityQueueDStarLite() # PrioorityQueue is carried forward through each iterations
+
+            #for state1 in gameState.getAllStates():                                  # initially all costs are 1 (including wall positions)   
+            #    for state2 in gameState.getAllNeighbourStates(state1):               # set neighbouring states only to 1  # dict[ set([state1, state2]) ] = 1                                   
+            #        self.origEdgeCost.update({set([state1, state2]) : 1})
+            #        self.edgeCost.update({set([state1, state2]) : 1})
+            #        self.prevEdgeCost.update({set([state1, state2]) : 1})
+            #for state in gameState.getAllStates():
+            #    self.gValue.update({state : float('inf')})
+            #for state in gameState.getAllStates():
+            #    if state != self.nodeGoal:
+            #        self.rhs.update({state : float('inf')})
+            #self.rhs.update({self.nodeGoal : 0})
+            #self.heuristic = self.updateHeuristics() # To store the heuristic with respect to the current robotLoc(AKA nodeStart). ALSO need to update this whenever robot moves!
+
+            #self.pq.push( (self.nodeGoal, (self.heuristic[self.nodeGoal], 0)) )
+            #self.visitedNodes = []
+
+
+
+
         if warn and (gameState.getNumFood() != 1 or not gameState.hasFood(*goal)):
             print 'Warning: this does not look like a regular search maze'
 
