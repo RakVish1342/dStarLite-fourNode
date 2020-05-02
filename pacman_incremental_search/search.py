@@ -94,7 +94,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         prevSeen.append(currentState)
         # if the child is a goal state return a solution
         if problem.isGoalState(currentState):
-            print(">>>", pathCostDict[currentState][0])
+            #print(">>>", pathCostDict[currentState][0])
             return pathCostDict[currentState][0]
         else:
             # expand the node
@@ -220,11 +220,15 @@ def dStarLite(problem, heuristic=nullHeuristic):
         edgeStr = util.setStr(problem.startState, succ)
         nextStateCost.append(problem.edgeCost[edgeStr] + problem.gValue[succ])
     idx = nextStateCost.index(min(nextStateCost))
-    problem.startState,_action,_cost = nextStateList[idx]
-    print("RobotLoc: ", problem.startState)
-    problem.path.append(problem.startState)
+    problem.startState, action, _cost = nextStateList[idx]
+    #print("RobotLoc: ", problem.startState)
+    problem.pathSequence.append(problem.startState)
+    problem.actionSequence.append(action)
+
+    # Update heuristic since robot has moved now
     problem.heuristic = problem.updateHeuristics(problem.startState)
-    print("dummy")
+
+    return [action] # Converting to list, since in dStarLite only one action will be calculated per time step
 
 
 

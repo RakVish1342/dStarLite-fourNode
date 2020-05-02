@@ -221,8 +221,8 @@ class PositionSearchProblem(search.SearchProblem):
             self.heuristic = self.updateHeuristics(self.startState) # To store the heuristic with respect to the current robotLoc(AKA nodeStart). ALSO need to update this whenever robot moves!
             # Update queue
             self.pq.push( (self.goal, (self.heuristic[self.goal], 0)) )
-            self.path = []
-            self.actions = []
+            self.pathSequence = []
+            self.actionSequence = []
 
             #self.visitedNodes = [] Needed??
 
@@ -316,8 +316,6 @@ class PositionSearchProblem(search.SearchProblem):
             dict[state] = util.manhattanDistance(state, nodeStart)
         return dict
             
-
-
     def getCostOfActions(self, actions):
         """
         Returns the cost of a particular sequence of actions. If those actions
