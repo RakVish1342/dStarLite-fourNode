@@ -191,9 +191,11 @@ class PositionSearchProblem(search.SearchProblem):
             self.gValue = {}
             self.rhs = {}
             self.pq = util.PriorityQueueDStarLite() # PrioorityQueue is carried forward through each iterations
+            ## util.testPriorityQueueDStarLite()
+            self.internalStates = self.getAllInternalStates(gameState)
 
             # Set Edge Costs
-            for state1 in self.getAllInternalStates(gameState): # initially all costs are 1 (including wall positions)
+            for state1 in self.internalStates: # initially all costs are 1 (including wall positions)
                 for state2 in self.getSuccessorsTmp(state1):
                         self.origEdgeCost[ util.setStr(state1, state2) ] = 1
                         self.edgeCost[ util.setStr(state1, state2) ] = 1
@@ -202,15 +204,17 @@ class PositionSearchProblem(search.SearchProblem):
             ## OR just exclude outermost walls always as part of general algorithm?
 
             # Set g and rhs values
-            for state in self.getAllInternalStates(gameState):
+            for state in self.internalStates:
                 self.gValue[state] = float('inf')
                 self.rhs[state] = float('inf')
             self.rhs[self.goal] = 0  # rhs of goal state is 0
+            # Set heurisitc
+            self.heuristic = self.updateHeuristics(self.startState) # To store the heuristic with respect to the current robotLoc(AKA nodeStart). ALSO need to update this whenever robot moves!
+            # Update queue
+            self.pq.push( (self.goal, (self.heuristic[self.goal], 0)) )
 
-            #self.heuristic = self.updateHeuristics() # To store the heuristic with respect to the current robotLoc(AKA nodeStart). ALSO need to update this whenever robot moves!
 
-            #self.pq.push( (self.nodeGoal, (self.heuristic[self.nodeGoal], 0)) )
-            #self.visitedNodes = []
+            #self.visitedNodes = [] Needed??
 
 
 
@@ -295,8 +299,15 @@ class PositionSearchProblem(search.SearchProblem):
         if state not in self._visited:
             self._visited[state] = True
             self._visitedlist.append(state)
-
         return successors
+
+    def updateHeuristics(self, nodeStart):
+        dict = {}
+        for state in self.internalStates:
+            dict[state] = util.manhattanDistance(state, nodeStart)
+        return dict
+            
+
 
     def getCostOfActions(self, actions):
         """

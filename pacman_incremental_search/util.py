@@ -208,7 +208,7 @@ class PriorityQueue:
 
 class PriorityQueueDStarLite:
     def __init__(self):
-        self.queue = [] # [ ("A",(1,2)), ("B", (1,3)) ] # [ (1,2,"A"), (1,3,"B") ]
+        self.queue = [] # [ (NodeIdx,(k1,k2)), ((x,y), (1,3)), ((2,2), (1,3)) ]
 
     def push(self, newElem):
         bInserted = False
@@ -264,6 +264,36 @@ class PriorityQueueDStarLite:
 
     def getNames(self):
         return [node[0] for node in self.queue]
+
+def testPriorityQueueDStarLite():
+    pq = PriorityQueueDStarLite()
+    #pq.push( ("A", (1,2)) )
+    #pq.push( ("B", (1,2)) )
+    #pq.push( ("C", (2,2)) )
+    #pq.push( ("D", (0,2)) )
+    #pq.push( ("E", (0,2)) )
+
+    #pq.push( ("F", (2,3)) )
+    #pq.push( ("G", (5,5)) )
+    #pq.push( ("H", (5,4)) )
+    #pq.push( ("I", (5,5)) )
+
+    #pq.pop()
+    #pq.pop()
+    #pq.pop()
+
+    pq.push( ((1,1), (1,2)) )
+    pq.push( ((1,2), (1,2)) )
+    pq.push( ((1,3), (2,2)) )
+    pq.push( ((1,4), (0,2)) )
+    pq.push( ((1,5), (0,2)) )
+
+    pq.remove( ((1,1), (1,2)) )
+    pq.update( ((1,2), (5,5)) )
+
+    pq.display()
+
+
 
 class PriorityQueueWithFunction(PriorityQueue):
     """
