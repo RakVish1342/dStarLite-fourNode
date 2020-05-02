@@ -138,10 +138,18 @@ class SearchAgent(Agent):
         newProblem = self.searchType(state, self.walls, self.searchAlgoFlag)
         self.actions = self.searchFunction(newProblem)
 
-#        if 'actionIndex' not in dir(self): self.actionIndex = 0
-#        i = self.actionIndex
-#        self.actionIndex += 1
-        if 0 < len(self.actions):
+        # Originally, would send all actions to be executed directly, since
+        # agent knew the entire world and world was static
+        #if 'actionIndex' not in dir(self): self.actionIndex = 0
+        #i = self.actionIndex
+        #self.actionIndex += 1
+        #if i < len(self.actions):
+        #    return self.actions[i]
+        #else:
+        #    return Directions.STOP
+
+        # Now, need to send one action at a time, to allow for observation step by the agent
+        if len(self.actions) > 0:
             return self.actions[0]
         else:
             return Directions.STOP
@@ -184,6 +192,7 @@ class PositionSearchProblem(search.SearchProblem):
         self.visualize = visualize
         # Additional variables required if dStarAlgorithm
         if(algoFlag == 'dlite'):
+            self.firstLoop = True
             self.km = 0
             self.origEdgeCost = {}
             self.edgeCost = {}
@@ -213,11 +222,7 @@ class PositionSearchProblem(search.SearchProblem):
             # Update queue
             self.pq.push( (self.goal, (self.heuristic[self.goal], 0)) )
 
-
             #self.visitedNodes = [] Needed??
-
-
-
 
         if warn and (gameState.getNumFood() != 1 or not gameState.hasFood(*goal)):
             print 'Warning: this does not look like a regular search maze'
@@ -252,6 +257,8 @@ class PositionSearchProblem(search.SearchProblem):
                 allStates.append((x,y))
         return allStates
 
+    # This function is a copy of getSuccessors(), written without the last portions that uses
+    # self._expanded and other stuff, which is defined only in the search.py scope.
     def getSuccessorsTmp(self, state):
         """
         Returns successor states, the actions they require, and a cost of 1.

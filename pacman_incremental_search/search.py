@@ -122,7 +122,112 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
 
 def dStarLite(problem, heuristic=nullHeuristic):
-    print("TODO: DSTAR")
+    
+    ### Defining some functions
+    def updateObstacleEdges(nodeName):
+
+        # make copy old edge costs
+        
+        # nodeName = obst location
+        # if nodeName in state.getWalls
+        # set inf
+        
+        # Save prev Edge Cost
+        problem.prevEdgeCost = copy.deepcopy(problem.edgeCost)
+        # Find new Edge Cost (ie. reset all edges and change only those affected by latest obstacle position)
+        changedEdgeNodes = problem.getSuccessors(nodeName)
+        problem.edgeCost = copy.deepcopy(problem.origEdgeCost)
+
+        if(nodeName == "X"): # If no obstacles
+            return []
+
+        for nd in changedEdgeNodes:
+            edgeStr = utils.getAlphaOrder(nd, nodeName)
+            problem.edgeCost[edgeStr] = float('inf')
+        return changedEdgeNodes
+
+    def calculateKeys(nodeName):
+        k1 = min(problem.gValue[nodeName], problem.rhs[nodeName]) + problem.heuristic[nodeName] + problem.km
+        k2 = min(problem.gValue[nodeName], problem.rhs[nodeName])
+        return ( k1, k2 )
+
+    def updateVertex(nodeName):
+
+        if ( (problem.gValue[nodeName] != problem.rhs[nodeName]) and (nodeName in problem.pq.getNames()) ):
+            problem.pq.update( (nodeName, problem.calculateKeys(nodeName)) )
+
+        elif ( (problem.gValue[nodeName] != problem.rhs[nodeName]) and (nodeName not in problem.pq.getNames()) ):
+            problem.pq.push( (nodeName, problem.calculateKeys(nodeName)) )
+
+        elif ( (problem.gValue[nodeName] == problem.rhs[nodeName]) and (nodeName in problem.pq.getNames()) ):
+            #problem.visitedNodes.append(nodeName)
+            problem.pq.remove( (nodeName, problem.calculateKeys(nodeName)) )
+
+    def computeShortestPath(problem):
+    # While queue has elements in it AND the top element in queue is LT key or startNode/robotNode 
+    # OR rhs_startNode > gValue_startNode
+    #problem.visitedNodes = [] # Include this to prevent loops?
+        while( ( (problem.pq.queue) and problem.pq.topKey() <= calculateKeys(problem.startState) ) \
+                or problem.rhs[problem.startState] > problem.gValue[problem.startState] ):
+            tmpNode = problem.pq.top()
+            u = tmpNode[0]
+            kOld = tmpNode[1]
+            kNew = calculateKeys(u)
+
+            if(kOld < kNew):
+                problem.pq.update( (u, (kNew[0], knew[1])) )
+            elif (problem.gValue[u] > problem.rhs[u]):
+                problem.gValue[u] = problem.rhs[u]
+                problem.pq.remove(tmpNode)
+
+                # get predecessors
+                for pred, _action in problem.getSuccessors(u):      # ((x1,y1), (x2, y2))
+                    if(pred != problem.goal):
+                        edgeStr = util.strSet(u, pred)
+                        problem.rhs[pred] = min( problem.rhs[pred], problem.edgeCost[edgeStr] + problem.gValue[u] )
+                        problem.updateVertex(pred)
+            else:
+                gOld = problem.gValue[u]
+                problem.gValue[u] = float('inf')
+
+                # get predecessors and current node itself
+                predecessors = problem.getSuccessors(u)
+                predecessors.append(u)
+                for pred in predecessors: # represented as s in paper
+                    edgeStr = utils.getAlphaOrder(u, pred)
+                        # Skip RHS update value and go on to queueUpdate step if dealing with predecessor = node u itself
+                    #if ( (pred != u) and (pred not in problem.visitedNodes) and (problem.rhs[pred] == problem.edgeCost[edgeStr] + gOld) ):
+                    if ( (pred != u) and (problem.rhs[pred] == problem.edgeCost[edgeStr] + gOld) ):
+                        if(pred != problem.goal):
+                            rhsList = []
+                            # update rhs to be min of all successors
+                            for succ in problem.getSuccessors(pred): # represented as s' in paper
+                                edgeStr = utils.getAlphaOrder(pred, succ)
+                                rhsList.append(problem.edgeCost[edgeStr] + problem.gValue[succ])
+                            problem.rhs[pred] = min(rhsList)
+                    problem.updateVertex(pred) # include this statement in the not in problem.visitedNodes??
+    
+    ### Actual code of the function starts here
+    # This step is to be performed once at the beginning only, right after initialization of all param
+    if(problem.firstLoop):
+        computeShortestPath(problem)
+        problem.firstLoop = False
+
+    # Take the next step
+    nextStateList = problem.getSuccessors(state)
+    #nextStateCost = []
+    #for succ in nextStateList:
+    #    edgeStr = utils.getAlphaOrder(dlite.startState, succ)
+    #    nextStateCost.append(dlite.edgeCost[edgeStr] + dlite.gValue[succ])
+    #idx = nextStateCost.index(min(nextStateCost))
+    #dlite.startState = nextStateList[idx]
+    #print("RobotLoc: ", dlite.startState)
+    #dlite.path.append(dlite.startState)
+    #dlite.heuristic = dlite.updateHeuristics()
+
+
+
+
 
 
 
