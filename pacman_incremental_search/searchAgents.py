@@ -110,12 +110,14 @@ class SearchAgent(Agent):
         for y in xrange(mazeHeight):
             self.walls[0][y] = True
             self.walls[mazeWidth - 1][y] = True
-
+        f = open('run_log.txt', 'w')
         if self.searchFunction == None: raise Exception, "No search function provided for SearchAgent"
         starttime = time.time()
         problem = self.searchType(state, self.walls) # Makes a new search problem
         self.actions  = self.searchFunction(problem) # Find a path
         totalCost = problem.getCostOfActions(self.actions)
+        f.write('{}\t{}\n'.format(str(problem._expanded), str(time.time() - starttime)))
+        f.close()
         print('Path found with total cost of %d in %.1f seconds' % (totalCost, time.time() - starttime))
         if '_expanded' in dir(problem): print('Search nodes expanded: %d' % problem._expanded)
 
@@ -127,10 +129,18 @@ class SearchAgent(Agent):
 
         state: a GameState object (pacman.py)
         """
+        f = open('run_log.txt', 'a')
+        starttime = time.time()
+
         pacPos = state.data.agentStates[0].getPosition()
         newProblem = self.searchType(state, self.walls)
         self.actions = self.searchFunction(newProblem)
 
+        totalCost = newProblem.getCostOfActions(self.actions)
+        print('Path found with total cost of %d in %.1f seconds' % (totalCost, time.time() - starttime))
+        if '_expanded' in dir(newProblem): print('Search nodes expanded: %d' % newProblem._expanded)
+        f.write('{}\t{}\n'.format(str(newProblem._expanded), str(time.time() - starttime)))
+        f.close()
 #        if 'actionIndex' not in dir(self): self.actionIndex = 0
 #        i = self.actionIndex
 #        self.actionIndex += 1
