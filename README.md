@@ -1,91 +1,55 @@
-5 Node D\* Lite Algorithm
-===
+# CSE 571 Group Project
+## Team 8 - Topic 2: Liflong Planning
 
-Implementation of the incremental path planning algorithm D\* Lite has been done for the graph presented at: ``` https://www.youtube.com/watch?v=_4u9W1xOuts&t=3372s```
-
-Examples
+Team Members and Contribution
 ---
+Rakshith Vishwanatha
+* D\* Lite algorithm implementation for 5 node example cluster
+* D\* Lite algorithm implementation for Packman Environment
 
-** 1. No Obstacles **
+Nicholas Downey
+* A\* algorithm for baseline performance measurement
+* Modification of Pacman environment for Local Observability
+* Statistics and Data Collection
 
+Nishanth BM
+* Wrote LPA\* Algorithm for 5 node cluster
+* Tested and validated D\* Lite algorithm on 5 node cluster
+* Worked on report
+
+Jayasurya SM
+* Tested and validated D\* Lite algorithm on 5 node cluster
+* Worked on report
+
+This project works on comparing the performance between heuristic search like A\* and an incremental search algorithm like D\* Lite.  The algorithm has been implemented for the Pacman environment. Modifications have been made to the environemnt to allow for:
+
+1. Local environment sensing by the robot and retention of information about walls/obstacles over time.
+2. D\* Lite algorithm and retention of learned path and priority queue over time.
+3. Data and Statistics collection for offline analysis.
+
+
+## Usage
+
+Go to the ```pacman_incremental_search``` folder and run the following commands:
+
+### A\* Commands
 ```
-('RobotLoc: ', 'A')
-('gValues: ', {'A': inf, 'C': inf, 'B': inf, 'D': inf, 'G': inf})
-('rhs: ', {'A': inf, 'C': inf, 'B': inf, 'D': inf, 'G': 0})
-('km: ', 0)
-('queue: ', [('G', (3, 0))])
-('Goal: ', 'G')
------
-('RobotLoc: ', 'B')
-Enter obstacle node:X
-('gValues: ', {'A': 3, 'C': 1, 'B': 2, 'D': inf, 'G': 0})
-('rhs: ', {'A': 3, 'C': 1, 'B': 2, 'D': 2, 'G': 0})
-('km: ', 0)
-('queue: ', [('D', (4, 2))])
-('Goal: ', 'G')
------
-('RobotLoc: ', 'C')
-Enter obstacle node:X
-('gValues: ', {'A': 3, 'C': 1, 'B': 2, 'D': inf, 'G': 0})
-('rhs: ', {'A': 3, 'C': 1, 'B': 2, 'D': 2, 'G': 0})
-('km: ', 0)
-('queue: ', [('D', (4, 2))])
-('Goal: ', 'G')
------
-('RobotLoc: ', 'G')
-Enter obstacle node:X
-('gValues: ', {'A': 3, 'C': 1, 'B': 2, 'D': inf, 'G': 0})
-('rhs: ', {'A': 3, 'C': 1, 'B': 2, 'D': 2, 'G': 0})
-('km: ', 0)
-('queue: ', [('D', (4, 2))])
-('Goal: ', 'G')
------
-('Path Followed by Robot: ', ['A', 'B', 'C', 'G'])
-Press any key to continue . . .
+python pacman.py -l tinyMaze -z .5 -p SearchAgent -a fn=astar,heuristic=manhattanHeuristic
+python pacman.py -l mediumMaze -z .5 -p SearchAgent -a fn=astar,heuristic=manhattanHeuristic
+python pacman.py -l bigMaze -z .5 -p SearchAgent -a fn=astar,heuristic=manhattanHeuristic
 ```
 
-** 2. Obstacle That Follows Robot **
+### D\* Commands
+```
+python pacman.py -l tinyMaze -z .5 -p SearchAgent -a fn=dlite,heuristic=manhattanHeuristic
+python pacman.py -l mediumMaze -z .5 -p SearchAgent -a fn=dlite,heuristic=manhattanHeuristic
+python pacman.py -l bigMaze -z .5 -p SearchAgent -a fn=dlite,heuristic=manhattanHeuristic
+```
 
+
+### Four Node D* Lite Commands
 ```
-('RobotLoc: ', 'A')
-('gValues: ', {'A': inf, 'C': inf, 'B': inf, 'D': inf, 'G': inf})
-('rhs: ', {'A': inf, 'C': inf, 'B': inf, 'D': inf, 'G': 0})
-('km: ', 0)
-('queue: ', [('G', (3, 0))])
-('Goal: ', 'G')
------
-('RobotLoc: ', 'B')
-Enter obstacle node:C
-('gValues: ', {'A': inf, 'C': inf, 'B': 11, 'D': 10, 'G': 0})
-('rhs: ', {'A': 12, 'C': inf, 'B': 11, 'D': 10, 'G': 0})
-('km: ', 1)
-('queue: ', [('A', (14, 12))])
-('Goal: ', 'G')
------
-('RobotLoc: ', 'D')
-Enter obstacle node:B
-('gValues: ', {'A': inf, 'C': 1, 'B': 11, 'D': 2, 'G': 0})
-('rhs: ', {'A': inf, 'C': 1, 'B': inf, 'D': 2, 'G': 0})
-('km: ', 2)
-('queue: ', [('B', (14, 11))])
-('Goal: ', 'G')
------
-('RobotLoc: ', 'C')
-Enter obstacle node:D
-('gValues: ', {'A': inf, 'C': 1, 'B': 11, 'D': 2, 'G': 0})
-('rhs: ', {'A': inf, 'C': 1, 'B': 2, 'D': inf, 'G': 0})
-('km: ', 3)
-('queue: ', [('B', (6, 2)), ('D', (6, 2))])
-('Goal: ', 'G')
------
-('RobotLoc: ', 'G')
-Enter obstacle node:C
-('gValues: ', {'A': inf, 'C': 1, 'B': 11, 'D': 2, 'G': 0})
-('rhs: ', {'A': inf, 'C': inf, 'B': 3, 'D': 10, 'G': 0})
-('km: ', 4)
-('queue: ', [('C', (6, 1)), ('D', (7, 2)), ('B', (9, 3))])
-('Goal: ', 'G')
------
-('Path Followed by Robot: ', ['A', 'B', 'D', 'C', 'G'])
-Press any key to continue . . .
+python FourNode.py
 ```
+
+Once the program prompts for the location of the obstacle, please enter (in capital letters) any location except the current robot or goal location. Example, you may input: ```A or B or C or D```. For no obstacle, you may enter ```X```. Sample output for the code is provided in the report.
